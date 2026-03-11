@@ -303,6 +303,8 @@
 
 <button class="manual-toggle" onclick="toggleManualForm()">+ Add Manual Entry</button>
 <div class="manual-form" id="manualForm">
+  <label for="manualDate">Date</label>
+  <input type="date" id="manualDate">
   <label for="manualTime">Start Time</label>
   <input type="time" id="manualTime" step="1">
   <div class="manual-row">
@@ -393,7 +395,9 @@
 
   function fmtTime(epoch) {
     const d = new Date(epoch);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const date = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return date + ' ' + time;
   }
 
   // --- Core Logic ---
@@ -590,10 +594,17 @@
 
     const durationMs = (durMin * 60 + durSec) * 1000;
 
-    // Parse the time input and apply it to today's date
+    // Parse date and time inputs
+    const dateInput = document.getElementById('manualDate').value;
     const [h, m, s] = timeInput.split(':').map(Number);
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+    let startDate;
+    if (dateInput) {
+      const [y, mo, d] = dateInput.split('-').map(Number);
+      startDate = new Date(y, mo - 1, d, h, m, s || 0);
+    } else {
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+    }
     const startMs = startDate.getTime();
 
     // Don't allow future times
@@ -616,6 +627,7 @@
     updateUI();
 
     // Reset form
+    document.getElementById('manualDate').value = '';
     document.getElementById('manualTime').value = '';
     document.getElementById('manualDurMin').value = '';
     document.getElementById('manualDurSec').value = '';
